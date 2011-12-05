@@ -27,7 +27,7 @@ package picmagick.display {
 			draggable = true;
 			spaceDown = false;
 			_canvas =  new LayeredCanvas();
-			_canvas.filters = [new DropShadowFilter(4, 45, 0, 1, 4, 4, 1, 3)];
+			_canvas.filters = [new DropShadowFilter(4, 45, 0, 0.5, 8, 8, 1, 5)];
 			mask = _mask = new Shape();
 			_centerX = _centerY = 0;
 			addChild(_canvas);

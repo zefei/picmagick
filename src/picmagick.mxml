@@ -3,7 +3,7 @@
 				xmlns:s="library://ns.adobe.com/flex/spark"
 				xmlns:mx="library://ns.adobe.com/flex/mx"
 				xmlns:local="*"
-				creationComplete="init()" layout="absolute" modalTransparencyColor="0xFFFFFF">
+				creationComplete="init()" layout="absolute">
 	<fx:Script>
 		<![CDATA[
 			import cmodule.as3_jpeg_wrapper.CLibInit;
