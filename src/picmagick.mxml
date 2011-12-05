@@ -78,8 +78,7 @@
 		]]>
 	</fx:Script>
 	
-	<mx:ViewStack id="vsLeft" left="0" top="50" bottom="0" width="250" backgroundAlpha="0.15"
-				  backgroundColor="0x000000">
+	<mx:ViewStack id="vsLeft" left="0" top="50" bottom="0" width="250">
 		<mx:VBox paddingBottom="20" paddingLeft="10" paddingRight="10" paddingTop="20"
 				 verticalGap="20">
 			<mx:Panel width="100%" layout="absolute" title="Basics">
@@ -106,7 +105,7 @@
 		<mx:Button id="load" label="Load Image" click="loadClicked()"/>
 		<mx:Button id="save" label="Save Image" click="saveClicked()" enabled="false"/>
 	</mx:ApplicationControlBar>
-	<mx:Text right="20" top="13" buttonMode="true" useHandCursor="true" mouseChildren="false"
+	<mx:Text right="20" top="15" buttonMode="true" useHandCursor="true" mouseChildren="false"
 			 click="navigateToURL(new URLRequest('http://www.picmagick.com/'), '_blank')"
 			 fontSize="15" text="Powered by PicMagick"/>
 </mx:Application>

@@ -3,7 +3,7 @@ Picmagick (www.picmagick.com) is a Flash (ActionScript) based photo editor I pro
 Source Structure
 ================
 
-The original project was developed using Flex builder 3. I re-packaged the code under Flash Builder 4.5, since the newer SDK has some improvements on bitmap data handling.
+The original project was developed using Flex SDK 3. I refactored the code under SDK 4.5 (using Flash Builder 4.5), since the newer SDK has some improvements on bitmap data handling and performance.
 
 The .mxml files under src/ are front ends that I put there as a demo of the image processing utilities. These files are a bit messy, but they are intended to be modified to whatever you want.
 
