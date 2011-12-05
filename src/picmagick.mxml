@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:local="*"
+				creationComplete="init()" layout="absolute" modalTransparencyColor="0xFFFFFF">
+	<fx:Script>
+		<![CDATA[
+			import cmodule.as3_jpeg_wrapper.CLibInit;
+			
+			import mx.events.ChildExistenceChangedEvent;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import picmagick.utils.*;
+			
+			[Bindable] private var _dialog:Dialog = new Dialog; // popup dialog window
+			private var _imageIO:ImageIO = new ImageIO(imageLoaded, imageSaved, ioError); // image IO utility
+			
+			private function init():void {
+				_dialog.addEventListener("saveClicked", function (event:Event):void { saveClicked(); });
+				_dialog.addEventListener("discardClicked", function (event:Event):void { _imageIO.loadImage(); });
+				addChild(_dialog);
+				removeChild(_dialog);
+			}
+			
+			// (event handler) load button clicked
+			private function loadClicked():void {
+				if (imageCanvas.saved) _imageIO.loadImage();
+				else {
+					_dialog.toSavePhoto();
+					PopUpManager.addPopUp(_dialog, this, true);
+					PopUpManager.centerPopUp(_dialog);
+				}
+			}
+			
+			// (event handler) save button clicked
+			private function saveClicked():void {
+				var bitmapData:BitmapData = imageCanvas.bitmapData;
+				_imageIO.saveImage(bitmapData);
+			}
+			
+			// (event handler) image is loaded
+			private function imageLoaded(bitmapData:BitmapData):void {
+				imageCanvas.loadImage(bitmapData);
+				save.enabled = true;
+				effects.enabled = true;
+				basics.enabled = true;
+				effects.resetView();
+				basics.resetView();
+			}
+			
+			// (event handler) image is saved
+			private function imageSaved():void {
+				imageCanvas.saved = true;
+			}
+			
+			// (event handler) io error occured
+			private function ioError():void {
+				_dialog.toIoError();
+				PopUpManager.centerPopUp(_dialog);
+			}
+			
+			// imageCanvas init
+			private function imageCanvasCreationComplete():void {
+				basics.imageCanvas = imageCanvas;
+				effects.imageCanvas = imageCanvas;
+				imageCanvas.canvas.layers.addEventListener("selectComplete", basics.selectComplete);
+				imageCanvas.canvas.layers.addEventListener("colorPicked", basics.colorPicked);
+			}
+			
+			// (event handler) undo finished
+			private function undoComplete():void {
+				basics.resetView(false);
+				effects.resetView();
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:ViewStack id="vsLeft" left="0" top="50" bottom="0" width="250" backgroundAlpha="0.15"
+				  backgroundColor="0x000000">
+		<mx:VBox paddingBottom="20" paddingLeft="10" paddingRight="10" paddingTop="20"
+				 verticalGap="20">
+			<mx:Panel width="100%" layout="absolute" title="Basics">
+				<local:Basics id="basics" left="10" right="10" top="10" bottom="10" width="100%"
+							  changeControl="effects.resetView()" dialog="{_dialog}" enabled="false"
+							  resizeToContent="true"/>
+			</mx:Panel>
+			<mx:Panel width="100%" layout="absolute" title="Effects">
+				<local:Effects id="effects" left="10" right="10" top="10" bottom="10" width="100%"
+							   changeControl="basics.resetView()" enabled="false"
+							   resizeToContent="true"/>
+			</mx:Panel>
+		</mx:VBox>
+	</mx:ViewStack>
+	<mx:ViewStack id="vsRight" left="250" right="0" top="50" bottom="0">
+		<mx:Canvas width="100%" height="100%">
+			<local:ImageCanvas id="imageCanvas" width="100%" height="100%"
+							   creationComplete="imageCanvasCreationComplete()"
+							   undoComplete="undoComplete()"/>
+		</mx:Canvas>
+	</mx:ViewStack>
+	<mx:ApplicationControlBar left="0" right="0" top="0" height="50" cornerRadius="0"
+							  fillAlphas="[0.1, 0.3]" fillColors="[#FFFFFF, #000000]">
+		<mx:Button id="load" label="Load Image" click="loadClicked()"/>
+		<mx:Button id="save" label="Save Image" click="saveClicked()" enabled="false"/>
+	</mx:ApplicationControlBar>
+	<mx:Text right="20" top="13" buttonMode="true" useHandCursor="true" mouseChildren="false"
+			 click="navigateToURL(new URLRequest('http://www.picmagick.com/'), '_blank')"
+			 fontSize="15" text="Powered by PicMagick"/>
+</mx:Application>

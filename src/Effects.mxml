@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ViewStack xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			  xmlns:s="library://ns.adobe.com/flex/spark" 
+			  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  width="250" creationPolicy="all">
+	<fx:Metadata>
+		[Event(name="changeControl", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import picmagick.graphics.*;
+			
+			public var imageCanvas:ImageCanvas; // image widget
+			private var bmd:BitmapDataEx; // image editing utility
+			
+			// reset this widget
+			public function resetView():void {
+				selectedChild = effectsControl;
+			}
+			
+			// start preview mode
+			private function startPreview():void {
+				dispatchEvent(new Event("changeControl"));
+				imageCanvas.cancelPreview();
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				imageCanvas.startPreview();
+			}
+			
+			// (event handler) done button clicked
+			private function clickDone():void {
+				imageCanvas.stopPreview();
+				resetView();
+			}
+			
+			// (event handler) cancel button clicked
+			private function clickCancel():void {
+				imageCanvas.cancelPreview();
+				resetView();
+			}
+
+			// (event handler) sharpen started
+			private function clickSharpen():void {
+				startPreview();
+				selectedChild = sharpenControl;
+				sharpness.value = 10;
+				bmd.preSharpen();
+				sharpen();
+			}
+			
+			// (event handler) sharpen confirmed
+			private function sharpen():void {
+				var s:Number = sharpness.value;
+				imageCanvas.bitmapData = bmd.sharpen(s);
+			}
+			
+			// (event handler) soften started
+			private function clickSoften():void {
+				startPreview();
+				selectedChild = softenControl;
+				softness.value = 50;
+				softenRadius.value = 4;
+				soften();
+			}
+			
+			// (event handler) soften confirmed
+			private function soften():void {
+				var s:Number = softness.value;
+				var r:Number = softenRadius.value;
+				imageCanvas.bitmapData = bmd.soften(s, r);
+			}
+			
+			// (event handler) sepia confirmed
+			private function clickSepia():void {
+				dispatchEvent(new Event("changeControl"));
+				imageCanvas.cancelPreview();
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				imageCanvas.bitmapData = bmd.sepia();
+			}
+
+			// (event handler) grayscale confirmed
+			private function clickGrayscale():void {
+				dispatchEvent(new Event("changeControl"));
+				imageCanvas.cancelPreview();
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				imageCanvas.bitmapData = bmd.grayscale();
+			}
+			
+			// (event handler) glow started
+			private function clickGlow():void {
+				startPreview();
+				selectedChild = glowControl;
+				intensity.value = 100;
+				glowRadius.value = 4;
+				glow();
+			}
+			
+			// (event handler) glow confirmed
+			private function glow():void {
+				var i:Number = intensity.value;
+				var r:Number = glowRadius.value;
+				imageCanvas.bitmapData = bmd.glow(i, r);
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:Move id="moveIn1" duration="100" xFrom="-200" xTo="0"/>
+		<mx:Move id="moveOut1" duration="100" xBy="200"/>
+		<mx:Move id="moveIn2" duration="100" xFrom="200" xTo="0"/>
+		<mx:Move id="moveOut2" duration="100" xBy="-200"/>
+	</fx:Declarations>
+	
+	<mx:VBox id="effectsControl" width="100%" hideEffect="{moveOut2}" showEffect="{moveIn1}">
+		<mx:Button width="100%" label="Sharpen" click="clickSharpen()"/>
+		<mx:Button width="100%" label="Soften" click="clickSoften()"/>
+		<mx:Button width="100%" label="Sepia" click="clickSepia()"/>
+		<mx:Button width="100%" label="Grayscale" click="clickGrayscale()"/>
+		<mx:Button width="100%" label="Glow" click="clickGlow()"/>
+	</mx:VBox>
+	
+	<mx:VBox id="sharpenControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Sharpen"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Sharpness:"/>
+			<mx:Label fontSize="11" text="{sharpness.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="sharpness" change="sharpen()" liveDragging="true" maximum="100" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="softenControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Soften"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Softness:"/>
+			<mx:Label fontSize="11" text="{softness.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="softness" change="soften()" liveDragging="true" maximum="100" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Radius:"/>
+			<mx:Label fontSize="11" text="{softenRadius.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="softenRadius" change="soften()" liveDragging="true" maximum="32" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="glowControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Glow"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Intensity:"/>
+			<mx:Label fontSize="11" text="{intensity.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="intensity" change="glow()" liveDragging="true" maximum="100" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Radius:"/>
+			<mx:Label fontSize="11" text="{glowRadius.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="glowRadius" change="glow()" liveDragging="true" maximum="32" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+</mx:ViewStack>

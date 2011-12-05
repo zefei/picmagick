@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ViewStack xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			  xmlns:s="library://ns.adobe.com/flex/spark" 
+			  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  width="250" creationPolicy="all">
+	<fx:Metadata>
+		[Event(name="changeControl", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			import mx.managers.PopUpManagerChildList;
+			import picmagick.graphics.*;
+			
+			public var dialog:Dialog; // popup dialog window
+			public var imageCanvas:ImageCanvas; // image widget
+			private var bmd:BitmapDataEx; // image editing utility
+			
+			[Bindable]
+            private var proportionData:Array = ["No constraints", "Original", "3 x 4", "4 x 6", "5 x 7", "8 x 10"]; // image aspect for cropping
+			
+			[Bindable]
+            private var quickOptions:Array = ["Nature", "Figures", "Reset", "Custom"]; // preset options for color enhancement
+
+			// reset this widget if current process is not cropping or force == true
+			public function resetView(force:Boolean = true):void {
+				if (force || selectedChild!=cropControl) {
+					selectedChild = basicsControl;
+					imageCanvas.stopSelect();
+					imageCanvas.stopRotate();
+					imageCanvas.stopSmooth();
+					imageCanvas.stopColorPicker();
+				}
+			}
+			
+			// start preview mode
+			private function startPreview():void {
+				dispatchEvent(new Event("changeControl"));
+				imageCanvas.cancelPreview();
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				imageCanvas.startPreview();
+			}
+			
+			// (event handler) done button clicked
+			private function clickDone():void {
+				imageCanvas.stopPreview();
+				resetView();
+			}
+			
+			// (event handler) cancel button clicked
+			private function clickCancel():void {
+				imageCanvas.cancelPreview();
+				resetView();
+			}
+			
+			// (event handler) crop started
+			private function clickCrop():void {
+				dispatchEvent(new Event("changeControl"));
+				imageCanvas.cancelPreview();
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				selectedChild = cropControl;
+				imageCanvas.startSelect();
+				proportion.selectedIndex = 0;
+			}
+			
+			// (event handler) crop confirmed
+			private function crop():void {
+				var rect:Rectangle = imageCanvas.canvas.layers.selection;
+				if (rect) imageCanvas.bitmapData = bmd.crop(rect);
+				imageCanvas.canvas.resetPosition();
+			}
+			
+			// (event handler) image aspect changed
+			private function changeProportion():void {
+				switch (proportion.selectedIndex) {
+					case 0:
+						imageCanvas.proportion = 0;
+						break;
+					case 1:
+						if (bmd.bitmapData.width < bmd.bitmapData.height) imageCanvas.proportion = bmd.bitmapData.width / bmd.bitmapData.height;
+						else imageCanvas.proportion = bmd.bitmapData.height / bmd.bitmapData.width;
+						break;
+					case 2:
+						imageCanvas.proportion = 3 / 4;
+						break;
+					case 3:
+						imageCanvas.proportion = 4 / 6;
+						break;
+					case 4:
+						imageCanvas.proportion = 5 / 7;
+						break;
+					case 5:
+						imageCanvas.proportion = 8 / 10;
+						break;
+				}
+			}
+			
+			// (event handler) rotate started
+			private function clickRotate():void {
+				startPreview();
+				selectedChild = rotateControl;
+				imageCanvas.startRotate();
+				rotateAngle.value = 0;
+			}
+			
+			// (event handler) rotate confirmed
+			private function rotate():void {
+				var angle:Number = rotateAngle.value;
+				imageCanvas.bitmapData = bmd.rotate(angle);
+				imageCanvas.canvas.resetPosition();
+			}
+			
+			// (event handler) turn (left / right) confirmed
+			private function turn(angle:Number):void {
+				bmd = new BitmapDataEx(bmd.rotate(angle));
+				rotate();
+			}
+			
+			// (event handler) redeye started
+			private function clickRedeye():void {
+				startPreview();
+				selectedChild = redeyeControl;
+				imageCanvas.startSelect();
+			}
+			
+			// (event handler) redeye area selected
+			public function selectComplete(event:Event):void {
+				if (selectedChild == redeyeControl) redeye();
+			}
+			
+			private function redeye():void {
+				var rect:Rectangle = imageCanvas.canvas.layers.selection;
+				bmd = new BitmapDataEx(imageCanvas.bitmapData);
+				if (rect) imageCanvas.bitmapData = bmd.redeye(rect);
+				imageCanvas.canvas.layers.resetSelection();
+			}
+			
+			// (event handler) skin smooth started
+			private function clickSmooth():void {
+				startPreview();
+				selectedChild = smoothControl;
+				brushType.selectedIndex = 0;
+				imageCanvas.canvas.layers.brushMode = BlendMode.NORMAL;
+				brushSize.value = 30;
+				imageCanvas.canvas.layers.brushSize = 30;
+				poreRadius.value = 2;
+				imageCanvas.startSmooth();
+				smooth();
+			}
+			
+			// (event handler) skin smooth confirmed
+			private function smooth():void {
+				var bitmapData:BitmapData = bmd.smooth(poreRadius.value);
+				imageCanvas.canvas.layers.smoothLayer = bitmapData;
+			}
+			
+			// (event handler) brush type changed under skin smooth
+			private function brushTypeChange():void {
+				if (brushType.selectedIndex == 0) imageCanvas.canvas.layers.brushMode = BlendMode.NORMAL;
+				else imageCanvas.canvas.layers.brushMode = BlendMode.ERASE;
+			}
+			
+			// (event handler) brush size changed under skin smooth
+			private function brushSizeChange():void {
+				var d:Number = brushSize.value;
+				imageCanvas.canvas.layers.brushSize = d;
+			}
+			
+			// (event handler) skin smooth completed
+			private function doneSmooth():void {
+				imageCanvas.doneSmooth();
+				clickDone();
+			}
+			
+			// (event handler) color adjust (white balance) started
+			private function clickAdjust():void {
+				startPreview();
+				selectedChild = adjustControl;
+				temperature.value = 0;
+				tint.value = 0;
+				neutralColor = 0x7F7F7F;
+				imageCanvas.startColorPicker();
+			}
+			
+			// (event handler) color adjust (white balance) confirmed
+			private function changeColor():void {
+				var t:Number = temperature.value;
+				var g:Number = tint.value;
+				
+				if (t > 0) t = t / 100 * (11995 - 6507) + 6507;
+				else t = t / 100 * (6507 - 2005) + 6507;
+				g = -g;
+				if (g > 0) g = 1 / (1 - g / 100);
+				else g = g / 100 + 1;
+				
+				var rgb:Array = ColorBalance.t2rgb(t, g);
+				var red:int = Math.round(Math.min(rgb[0] * 127, 225));
+				var green:int = Math.round(Math.min(rgb[1] * 127, 225));
+				var blue:int = Math.round(Math.min(rgb[2] * 127, 225));
+				neutralColor = ColorBalance.rgb2int(red, green, blue);
+				
+				imageCanvas.bitmapData = bmd.scaleColor(1 / rgb[0], 1 / rgb[1], 1 / rgb[2]);
+			}
+			
+			// (event handler) color picker used on canvas under white balance process
+			public function colorPicked(event:Event):void {
+				var p:Point = imageCanvas.canvas.layers.positionPicked;
+				var color:int = bmd.bitmapData.getPixel(p.x, p.y);
+				neutralColor = color;
+				
+				var rgb:Array = ColorBalance.int2rgb(color);
+				var tg:Array = ColorBalance.rgb2t(rgb[0] + 0.001, rgb[1] + 0.001, rgb[2] + 0.001);
+				rgb = ColorBalance.t2rgb(tg[0], tg[1]);
+				
+				var t:Number = tg[0];
+				var g:Number = tg[1];
+				if (t > 6507) t = (t - 6507) / (11995 - 6507) * 100;
+				else t = (t - 6507) / (6507 - 2005) * 100;
+				if (g > 1) g = (1 - 1 / g) * 100;
+				else g = (g - 1) * 100;
+				g = -g;
+				temperature.value = Math.round(t);
+				tint.value = Math.round(g);
+				
+				imageCanvas.bitmapData = bmd.scaleColor(1 / rgb[0], 1 / rgb[1], 1 / rgb[2]);
+			}
+			
+			// (event handler) auto color used under white balance process
+			private function autoColor():void {
+				dialog.toBusy();
+				PopUpManager.addPopUp(dialog, FlexGlobals.topLevelApplication as DisplayObject, true);
+				PopUpManager.centerPopUp(dialog);
+				setTimeout(startAutoColor, 250);
+			}
+			
+			private function startAutoColor():void {
+				var rgb:Array = ColorBalance.whitePoint(bmd.bitmapData);
+				var color:int = ColorBalance.rgb2int(rgb[0], rgb[1], rgb[2]); 
+				neutralColor = color;
+				
+				var tg:Array = ColorBalance.rgb2t(rgb[0] + 0.001, rgb[1] + 0.001, rgb[2] + 0.001);
+				rgb = ColorBalance.t2rgb(tg[0], tg[1]);
+				
+				var t:Number = tg[0];
+				var g:Number = tg[1];
+				if (t > 6507) t = (t - 6507) / (11995 - 6507) * 100;
+				else t = (t - 6507) / (6507 - 2005) * 100;
+				if (g > 1) g = (1 - 1 / g) * 100;
+				else g = (g - 1) * 100;
+				g = -g;
+				temperature.value = Math.round(t);
+				tint.value = Math.round(g);
+				
+				imageCanvas.bitmapData = bmd.scaleColor(1 / rgb[0], 1 / rgb[1], 1 / rgb[2]);
+				PopUpManager.removePopUp(dialog);
+			}
+			
+			// set neutral color for white balance
+			private function set neutralColor(color:int):void {
+				neutral.graphics.lineStyle(1, 0x333333);
+				neutral.graphics.beginFill(color);
+				neutral.graphics.drawRect(0, 0, 40, 16);
+				neutral.graphics.endFill();
+			}
+			
+			// (event handler) color enhancement started
+			private function clickEnhance():void {
+				startPreview();
+				selectedChild = enhanceControl;
+				quickopt.selectedIndex = 0;
+				shadow.value = 40;
+				highlight.value = 20;
+				brightness.value = 0;
+				contrast.value = 20;
+				
+				dialog.toBusy();
+				PopUpManager.addPopUp(dialog, FlexGlobals.topLevelApplication as DisplayObject, true);
+				PopUpManager.centerPopUp(dialog);
+				setTimeout(startPreEnhance, 250);
+			}
+			
+			// prepare color enhancement
+			private function startPreEnhance():void {
+				bmd.preEnhance();
+				enhance();
+				PopUpManager.removePopUp(dialog);
+			}
+			
+			// (event handler) color enhancement confirmed
+			private function enhance(optionsChanged:Boolean = false):void {
+				if (optionsChanged) quickopt.selectedIndex = 4;
+				var s:Number = shadow.value;
+				var h:Number = highlight.value;
+				var b:Number = brightness.value;
+				var c:Number = contrast.value;
+				imageCanvas.bitmapData = bmd.enhance(s, h, b, c);
+			}
+			
+			// (event handler) preset options changed under color enhancement process
+			private function changeQuickopt():void {
+				switch (quickopt.selectedIndex) {
+					case 0:
+						shadow.value = 40;
+						highlight.value = 20;
+						brightness.value = 0;
+						contrast.value = 20;
+						break;
+					case 1:
+						shadow.value = 10;
+						highlight.value = 20;
+						brightness.value = 10;
+						contrast.value = 5;
+						break;
+					case 2:
+						shadow.value = 0;
+						highlight.value = 0;
+						brightness.value = 0;
+						contrast.value = 0;
+						break;
+				}
+				if (quickopt.selectedIndex != 3) enhance();
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:Move id="moveIn1" duration="100" xFrom="-200" xTo="0"/>
+		<mx:Move id="moveOut1" duration="100" xBy="200"/>
+		<mx:Move id="moveIn2" duration="100" xFrom="200" xTo="0"/>
+		<mx:Move id="moveOut2" duration="100" xBy="-200"/>
+	</fx:Declarations>
+	
+    
+	<mx:VBox id="basicsControl" width="100%" hideEffect="{moveOut2}" showEffect="{moveIn1}">
+		<mx:Button width="100%" label="Crop" click="clickCrop()"/>
+		<mx:Button width="100%" label="Rotate" click="clickRotate()"/>
+		<mx:Button width="100%" label="Fix Red-eye" click="clickRedeye()"/>
+		<mx:Button width="100%" label="Smooth Skin" click="clickSmooth()"/>
+		<mx:Button width="100%" label="Adjust Colors" click="clickAdjust()"/>
+		<mx:Button width="100%" label="Enhance Colors" click="clickEnhance()"/>
+	</mx:VBox>
+	
+	<mx:VBox id="cropControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Crop"/>
+		<mx:Text width="100%" text="Click and drag on the image to select the area you want to crop."/>
+		<mx:Label fontSize="11" text="Proportion"/>
+		<mx:ComboBox id="proportion" change="changeProportion()" dataProvider="{proportionData}"
+					 editable="false" fontWeight="normal" rowCount="6"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Apply" click="crop();clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="rotateControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Rotate"/>
+		<mx:ControlBar>
+			<mx:Button label="90° ←" click="turn(-90)"/>
+			<mx:Button label="90° →" click="turn(90)"/>
+		</mx:ControlBar>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Angle:"/>
+			<mx:Label fontSize="11" text="{rotateAngle.value.toFixed(1)}°" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="rotateAngle" change="rotate()" liveDragging="true" maximum="10" minimum="-10"
+					showDataTip="false" snapInterval="0.1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="redeyeControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Fix Red-eye"/>
+		<mx:Text width="100%"
+				 text="Click and drag on the image to select the area around each red-eye you want to fix."/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="smoothControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Smooth Skin"/>
+		<mx:Text width="100%"
+				 text="Paint with &quot;smooth&quot; brush over facial areas. Then use &quot;restore&quot; brush to reveal eyes, hairs, lips, etc."/>
+		<mx:Label fontSize="11" text="Brush Type:"/>
+		<mx:ToggleButtonBar id="brushType" itemClick="brushTypeChange()">
+			<mx:dataProvider>
+				<fx:Array>
+					<fx:String>Smooth</fx:String>
+					<fx:String>Restore</fx:String>
+				</fx:Array>
+			</mx:dataProvider>
+		</mx:ToggleButtonBar>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Brush Size:"/>
+			<mx:Label fontSize="11" text="{brushSize.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="brushSize" change="brushSizeChange()" liveDragging="true" maximum="50"
+					minimum="1" showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="10"/>
+		<mx:Text width="100%" text="Smoothing results are sensitive to the average radius of pores."/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Pore Radius:"/>
+			<mx:Label fontSize="11" text="{poreRadius.value.toFixed(1)}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="poreRadius" change="smooth()" liveDragging="true" maximum="5" minimum="0"
+					showDataTip="false" snapInterval="0.1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="doneSmooth()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="adjustControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Adjust Colors"/>
+		<mx:Text width="100%"
+				 text="To adjust color balance, use sliders or click on the image to pick a neutral color."/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Temperature:"/>
+			<mx:Label fontSize="11" text="{temperature.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="temperature" change="changeColor()" liveDragging="true" maximum="100"
+					minimum="-100" showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Tint:"/>
+			<mx:Label fontSize="11" text="{tint.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="tint" change="changeColor()" liveDragging="true" maximum="100" minimum="-100"
+					showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="20"/>
+		<mx:HBox>
+			<mx:Label text="Neutral Color"/>
+			<mx:UIComponent id="neutral" width="40" height="18"
+							creationComplete="neutralColor = 0x7F7F7F"/>
+		</mx:HBox>
+		<mx:Button label="Auto Adjust" click="autoColor()"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+	
+	<mx:VBox id="enhanceControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
+			 showEffect="{moveIn2}">
+		<mx:Label width="100%" fontWeight="bold" text="Enhance Colors"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="12" paddingTop="3" text="Quick Option "/>
+			<mx:ComboBox id="quickopt" change="changeQuickopt()" dataProvider="{quickOptions}"
+						 editable="false" fontWeight="normal" rowCount="4"/>
+		</mx:HBox>
+		<mx:Spacer height="5"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Shadow Correction:"/>
+			<mx:Label fontSize="11" text="{shadow.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="shadow" change="enhance(true)" liveDragging="true" maximum="100" minimum="0"
+					showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Highlight Correction:"/>
+			<mx:Label fontSize="11" text="{highlight.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="highlight" change="enhance(true)" liveDragging="true" maximum="100"
+					minimum="0" showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Brightness:"/>
+			<mx:Label fontSize="11" text="{brightness.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="brightness" change="enhance(true)" liveDragging="true" maximum="100"
+					minimum="-100" showDataTip="false" snapInterval="1"/>
+		<mx:HBox horizontalGap="0">
+			<mx:Label fontSize="11" text="Contrast:"/>
+			<mx:Label fontSize="11" text="{contrast.value}" textAlign="left"/>
+		</mx:HBox>
+		<mx:HSlider id="contrast" change="enhance(true)" liveDragging="true" maximum="100"
+					minimum="-100" showDataTip="false" snapInterval="1"/>
+		<mx:Spacer height="20"/>
+		<mx:ControlBar>
+			<mx:Button label="Done" click="clickDone()"/>
+			<mx:Button label="Cancel" click="clickCancel()"/>
+		</mx:ControlBar>
+	</mx:VBox>
+</mx:ViewStack>

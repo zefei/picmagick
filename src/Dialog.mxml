@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   backgroundColor="0xEEEEEE" borderStyle="solid" cornerRadius="20">
+	<fx:Metadata>
+		[Event(name="saveClicked", type="flash.events.Event")]
+		[Event(name="discardClicked", type="flash.events.Event")]
+		[Event(name="processCanceled", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.controls.Alert;
+			
+			// set dialog to save photo
+			public function toSavePhoto():void {
+				viewStack.selectedChild = savePhoto;
+			}
+			
+			// set dialog to indicate io error
+			public function toIoError():void {
+				viewStack.selectedChild = ioError;
+			}
+			
+			// set dialog to processing
+			public function toBusy():void {
+				viewStack.selectedChild = busy;
+			}
+			
+			// (event handler) save button clicked in save photo dialog
+			private function saveClicked():void {
+				PopUpManager.removePopUp(this);
+				dispatchEvent(new Event("saveClicked"));
+			}
+			
+			// (event handler) discard button clicked in save photo dialog
+			private function discardClicked():void {
+				PopUpManager.removePopUp(this);
+				dispatchEvent(new Event("discardClicked"));
+			}
+			
+			// (event handler) cancel button clicked in save photo dialog
+			private function cancelClicked():void {
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:ViewStack id="viewStack" creationPolicy="all" paddingBottom="20" paddingLeft="50"
+				  paddingRight="50" paddingTop="20" resizeToContent="true">
+		<mx:VBox id="savePhoto" horizontalAlign="center">
+			<mx:Text width="300" fontSize="14"
+					 text="You haven't save your photo yet. Do you want to save it now?"/>
+			<mx:Spacer height="20"/>
+			<mx:ControlBar paddingBottom="0" paddingTop="0">
+				<mx:Button width="80" label="Save" click="saveClicked()"/>
+				<mx:Button width="80" label="Discard" click="discardClicked()"/>
+				<mx:Button width="80" label="Cancel" click="cancelClicked()"/>
+			</mx:ControlBar>
+		</mx:VBox>
+		
+		<mx:VBox id="ioError" horizontalAlign="center">
+			<mx:Text width="300" fontSize="14" text="There was an error processing your file."/>
+			<mx:Spacer height="20"/>
+			<mx:Button width="80" label="OK" click="cancelClicked()"/>
+		</mx:VBox>
+		
+		<mx:VBox id="busy" horizontalAlign="center">
+			<mx:Text width="300" fontSize="14" text="Processing..." textAlign="center"/>
+		</mx:VBox>
+	</mx:ViewStack>
+</mx:Canvas>
