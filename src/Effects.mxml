@@ -112,70 +112,70 @@
 	</fx:Declarations>
 	
 	<mx:VBox id="effectsControl" width="100%" hideEffect="{moveOut2}" showEffect="{moveIn1}">
-		<mx:Button width="100%" label="Sharpen" click="clickSharpen()"/>
-		<mx:Button width="100%" label="Soften" click="clickSoften()"/>
-		<mx:Button width="100%" label="Sepia" click="clickSepia()"/>
-		<mx:Button width="100%" label="Grayscale" click="clickGrayscale()"/>
-		<mx:Button width="100%" label="Glow" click="clickGlow()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='sharpen_label')" click="clickSharpen()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='soften_label')" click="clickSoften()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='sepia_label')" click="clickSepia()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='grayscale_label')" click="clickGrayscale()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='glow_label')" click="clickGlow()"/>
 	</mx:VBox>
 	
 	<mx:VBox id="sharpenControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Sharpen"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='sharpen_label')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Sharpness:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='sharpen_sharpness')"/>
 			<mx:Label fontSize="11" text="{sharpness.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="sharpness" change="sharpen()" liveDragging="true" maximum="100" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="softenControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Soften"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='soften_label')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Softness:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='soften_softness')"/>
 			<mx:Label fontSize="11" text="{softness.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="softness" change="soften()" liveDragging="true" maximum="100" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Radius:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='soften_radius')"/>
 			<mx:Label fontSize="11" text="{softenRadius.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="softenRadius" change="soften()" liveDragging="true" maximum="32" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="glowControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Glow"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='glow_label')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Intensity:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='glow_intensity')"/>
 			<mx:Label fontSize="11" text="{intensity.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="intensity" change="glow()" liveDragging="true" maximum="100" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Radius:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='glow_radius')"/>
 			<mx:Label fontSize="11" text="{glowRadius.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="glowRadius" change="glow()" liveDragging="true" maximum="32" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 </mx:ViewStack>

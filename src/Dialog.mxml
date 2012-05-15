@@ -52,23 +52,23 @@
 				  paddingRight="50" paddingTop="20" resizeToContent="true">
 		<mx:VBox id="savePhoto" horizontalAlign="center">
 			<mx:Text width="300" fontSize="14"
-					 text="You haven't save your photo yet. Do you want to save it now?"/>
+					 text="@Resource(bundle='locale', key='dialog_not_saved')"/>
 			<mx:Spacer height="20"/>
 			<mx:ControlBar paddingBottom="0" paddingTop="0">
-				<mx:Button width="80" label="Save" click="saveClicked()"/>
-				<mx:Button width="80" label="Discard" click="discardClicked()"/>
-				<mx:Button width="80" label="Cancel" click="cancelClicked()"/>
+				<mx:Button width="80" label="@Resource(bundle='locale', key='common_save')" click="saveClicked()"/>
+				<mx:Button width="80" label="@Resource(bundle='locale', key='common_discard')" click="discardClicked()"/>
+				<mx:Button width="80" label="@Resource(bundle='locale', key='common_cancel')" click="cancelClicked()"/>
 			</mx:ControlBar>
 		</mx:VBox>
 		
 		<mx:VBox id="ioError" horizontalAlign="center">
-			<mx:Text width="300" fontSize="14" text="There was an error processing your file."/>
+			<mx:Text width="300" fontSize="14" text="@Resource(bundle='locale', key='dialog_error')"/>
 			<mx:Spacer height="20"/>
-			<mx:Button width="80" label="OK" click="cancelClicked()"/>
+			<mx:Button width="80" label="@Resource(bundle='locale', key='common_ok')" click="cancelClicked()"/>
 		</mx:VBox>
 		
 		<mx:VBox id="busy" horizontalAlign="center">
-			<mx:Text width="300" fontSize="14" text="Processing..." textAlign="center"/>
+			<mx:Text width="300" fontSize="14" text="@Resource(bundle='locale', key='dialog_processing')" textAlign="center"/>
 		</mx:VBox>
 	</mx:ViewStack>
 </mx:Canvas>

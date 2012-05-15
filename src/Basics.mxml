@@ -2,7 +2,8 @@
 <mx:ViewStack xmlns:fx="http://ns.adobe.com/mxml/2009" 
 			  xmlns:s="library://ns.adobe.com/flex/spark" 
 			  xmlns:mx="library://ns.adobe.com/flex/mx"
-			  width="250" creationPolicy="all">
+			  width="250" creationPolicy="all"
+			  creationComplete="init()">
 	<fx:Metadata>
 		[Event(name="changeControl", type="flash.events.Event")]
 	</fx:Metadata>
@@ -12,6 +13,7 @@
 			import mx.core.FlexGlobals;
 			import mx.managers.PopUpManager;
 			import mx.managers.PopUpManagerChildList;
+			import mx.resources.ResourceBundle;
 			import picmagick.graphics.*;
 			
 			public var dialog:Dialog; // popup dialog window
@@ -19,10 +21,20 @@
 			private var bmd:BitmapDataEx; // image editing utility
 			
 			[Bindable]
-            private var proportionData:Array = ["No constraints", "Original", "3 x 4", "4 x 6", "5 x 7", "8 x 10"]; // image aspect for cropping
+            private var proportionData:Array; // image aspect for cropping
 			
 			[Bindable]
-            private var quickOptions:Array = ["Nature", "Figures", "Reset", "Custom"]; // preset options for color enhancement
+			private var brushTypes:Array; // brush types for smooth tool
+			
+			[Bindable]
+            private var quickOptions:Array; // preset options for color enhancement
+			
+			// init locale
+			private function init():void {
+				proportionData = [resourceManager.getString('locale', 'crop_proportion_any'), resourceManager.getString('locale', 'crop_proportion_original'), "3 x 4", "4 x 6", "5 x 7", "8 x 10"];
+				brushTypes = [resourceManager.getString('locale', 'smooth_brush_type_smooth'), resourceManager.getString('locale', 'smooth_brush_type_restore')];
+				quickOptions = [resourceManager.getString('locale', 'enhance_options_nature'), resourceManager.getString('locale', 'enhance_options_figures'), resourceManager.getString('locale', 'enhance_options_reset'), resourceManager.getString('locale', 'enhance_options_custom')];
+			}
 
 			// reset this widget if current process is not cropping or force == true
 			public function resetView(force:Boolean = true):void {
@@ -334,82 +346,75 @@
 	
     
 	<mx:VBox id="basicsControl" width="100%" hideEffect="{moveOut2}" showEffect="{moveIn1}">
-		<mx:Button width="100%" label="Crop" click="clickCrop()"/>
-		<mx:Button width="100%" label="Rotate" click="clickRotate()"/>
-		<mx:Button width="100%" label="Fix Red-eye" click="clickRedeye()"/>
-		<mx:Button width="100%" label="Smooth Skin" click="clickSmooth()"/>
-		<mx:Button width="100%" label="Adjust Colors" click="clickAdjust()"/>
-		<mx:Button width="100%" label="Enhance Colors" click="clickEnhance()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='crop_label')" click="clickCrop()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='rotate_label')" click="clickRotate()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='redeye_label')" click="clickRedeye()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='smooth_label')" click="clickSmooth()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='adjust_label')" click="clickAdjust()"/>
+		<mx:Button width="100%" label="@Resource(bundle='locale', key='enhance_label')" click="clickEnhance()"/>
 	</mx:VBox>
 	
 	<mx:VBox id="cropControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Crop"/>
-		<mx:Text width="100%" text="Click and drag on the image to select the area you want to crop."/>
-		<mx:Label fontSize="11" text="Proportion"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='crop_label')"/>
+		<mx:Text width="100%" text="@Resource(bundle='locale', key='crop_description')"/>
+		<mx:Label fontSize="11" text="@Resource(bundle='locale', key='crop_proportion')"/>
 		<mx:ComboBox id="proportion" change="changeProportion()" dataProvider="{proportionData}"
 					 editable="false" fontWeight="normal" rowCount="6"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Apply" click="crop();clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_apply')" click="crop();clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="rotateControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Rotate"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='rotate_label')"/>
 		<mx:ControlBar>
 			<mx:Button label="90° ←" click="turn(-90)"/>
 			<mx:Button label="90° →" click="turn(90)"/>
 		</mx:ControlBar>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Angle:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='rotate_angle')"/>
 			<mx:Label fontSize="11" text="{rotateAngle.value.toFixed(1)}°" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="rotateAngle" change="rotate()" liveDragging="true" maximum="10" minimum="-10"
 					showDataTip="false" snapInterval="0.1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="redeyeControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Fix Red-eye"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='redeye_label')"/>
 		<mx:Text width="100%"
-				 text="Click and drag on the image to select the area around each red-eye you want to fix."/>
+				 text="@Resource(bundle='locale', key='redeye_description')"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="smoothControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Smooth Skin"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='smooth_label')"/>
 		<mx:Text width="100%"
-				 text="Paint with &quot;smooth&quot; brush over facial areas. Then use &quot;restore&quot; brush to reveal eyes, hairs, lips, etc."/>
-		<mx:Label fontSize="11" text="Brush Type:"/>
-		<mx:ToggleButtonBar id="brushType" itemClick="brushTypeChange()">
-			<mx:dataProvider>
-				<fx:Array>
-					<fx:String>Smooth</fx:String>
-					<fx:String>Restore</fx:String>
-				</fx:Array>
-			</mx:dataProvider>
-		</mx:ToggleButtonBar>
+				 text="@Resource(bundle='locale', key='smooth_description_brushes')"/>
+		<mx:Label fontSize="11" text="@Resource(bundle='locale', key='smooth_brush_type')"/>
+		<mx:ToggleButtonBar id="brushType" itemClick="brushTypeChange()" dataProvider="{brushTypes}"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Brush Size:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='smooth_brush_size')"/>
 			<mx:Label fontSize="11" text="{brushSize.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="brushSize" change="brushSizeChange()" liveDragging="true" maximum="50"
 					minimum="1" showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="10"/>
-		<mx:Text width="100%" text="Smoothing results are sensitive to the average radius of pores."/>
+		<mx:Text width="100%" text="@Resource(bundle='locale', key='smooth_description_pores')"/>
 		<mx:HBox horizontalGap="0">
 			<mx:Label fontSize="11" text="Pore Radius:"/>
 			<mx:Label fontSize="11" text="{poreRadius.value.toFixed(1)}" textAlign="left"/>
@@ -418,78 +423,78 @@
 					showDataTip="false" snapInterval="0.1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="doneSmooth()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="doneSmooth()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="adjustControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Adjust Colors"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='adjust_label')"/>
 		<mx:Text width="100%"
-				 text="To adjust color balance, use sliders or click on the image to pick a neutral color."/>
+				 text="@Resource(bundle='locale', key='adjust_description')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Temperature:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='adjust_temperature')"/>
 			<mx:Label fontSize="11" text="{temperature.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="temperature" change="changeColor()" liveDragging="true" maximum="100"
 					minimum="-100" showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Tint:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='adjust_tint')"/>
 			<mx:Label fontSize="11" text="{tint.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="tint" change="changeColor()" liveDragging="true" maximum="100" minimum="-100"
 					showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="20"/>
 		<mx:HBox>
-			<mx:Label text="Neutral Color"/>
+			<mx:Label text="@Resource(bundle='locale', key='adjust_neutral')"/>
 			<mx:UIComponent id="neutral" width="40" height="18"
 							creationComplete="neutralColor = 0x7F7F7F"/>
 		</mx:HBox>
-		<mx:Button label="Auto Adjust" click="autoColor()"/>
+		<mx:Button label="@Resource(bundle='locale', key='adjust_auto')" click="autoColor()"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 	
 	<mx:VBox id="enhanceControl" width="100%" hideEffect="{moveOut1}" horizontalAlign="center"
 			 showEffect="{moveIn2}">
-		<mx:Label width="100%" fontWeight="bold" text="Enhance Colors"/>
+		<mx:Label width="100%" fontWeight="bold" text="@Resource(bundle='locale', key='enhance_label')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="12" paddingTop="3" text="Quick Option "/>
+			<mx:Label fontSize="12" paddingTop="3" text="@Resource(bundle='locale', key='enhance_options')"/>
 			<mx:ComboBox id="quickopt" change="changeQuickopt()" dataProvider="{quickOptions}"
 						 editable="false" fontWeight="normal" rowCount="4"/>
 		</mx:HBox>
 		<mx:Spacer height="5"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Shadow Correction:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='enhance_shadow')"/>
 			<mx:Label fontSize="11" text="{shadow.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="shadow" change="enhance(true)" liveDragging="true" maximum="100" minimum="0"
 					showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Highlight Correction:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='enhance_highlight')"/>
 			<mx:Label fontSize="11" text="{highlight.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="highlight" change="enhance(true)" liveDragging="true" maximum="100"
 					minimum="0" showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Brightness:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='enhance_brightness')"/>
 			<mx:Label fontSize="11" text="{brightness.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="brightness" change="enhance(true)" liveDragging="true" maximum="100"
 					minimum="-100" showDataTip="false" snapInterval="1"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Contrast:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='enhance_contrast')"/>
 			<mx:Label fontSize="11" text="{contrast.value}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="contrast" change="enhance(true)" liveDragging="true" maximum="100"
 					minimum="-100" showDataTip="false" snapInterval="1"/>
 		<mx:Spacer height="20"/>
 		<mx:ControlBar>
-			<mx:Button label="Done" click="clickDone()"/>
-			<mx:Button label="Cancel" click="clickCancel()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_done')" click="clickDone()"/>
+			<mx:Button label="@Resource(bundle='locale', key='common_cancel')" click="clickCancel()"/>
 		</mx:ControlBar>
 	</mx:VBox>
 </mx:ViewStack>

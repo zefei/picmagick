@@ -14,6 +14,8 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.resources.ResourceBundle;
+			
 			public var saved:Boolean = true; // if current image is saved after modification
 			
 			private var abmd:Array = []; // BitmapData stack for undoing modification
@@ -122,7 +124,7 @@
 			// (event handler) mouse over image, should show the image before current process if under preview mode
 			private function mouseOverPreview():void {
 				if (previewing) {
-					preview.label='Original';
+					preview.label = resourceManager.getString('locale', 'canvas_original');
 					canvas.bitmapData = abmd[index - 1];
 					if (canvas.layers.smoothing) canvas.layers.smoothVisible = false;
 				}
@@ -131,7 +133,7 @@
 			// (event handler) mouse out image, should show the preview if under preview mode
 			private function mouseOutPreview():void {
 				if (previewing) {
-					preview.label='Preview';
+					preview.label = resourceManager.getString('locale', 'canvas_preview');
 					canvas.bitmapData = abmd[index];
 					if (canvas.layers.smoothing) canvas.layers.smoothVisible = true;
 				}
@@ -201,13 +203,13 @@
 	
 	<mx:VBox left="10" right="10" top="10" bottom="10">
 		<mx:ControlBar width="100%" horizontalAlign="center">
-			<mx:Button id="preview" width="81" label="Preview"
+			<mx:Button id="preview" width="81" label="@Resource(bundle='locale', key='canvas_preview')"
 					   enabled="{previewing}" mouseOut="mouseOutPreview();"
 					   mouseOver="mouseOverPreview();"/>
-			<mx:Button id="undo" label="Undo" click="clickUndo()" enabled="false"/>
-			<mx:Button id="redo" label="Redo" click="clickRedo()" enabled="false"/>
+			<mx:Button id="undo" label="@Resource(bundle='locale', key='canvas_undo')" click="clickUndo()" enabled="false"/>
+			<mx:Button id="redo" label="@Resource(bundle='locale', key='canvas_redo')" click="clickRedo()" enabled="false"/>
 			<mx:Spacer width="50"/>
-			<mx:Label text="Zoom" textAlign="right"/>
+			<mx:Label text="@Resource(bundle='locale', key='canvas_zoom')" textAlign="right"/>
 			<mx:HSlider id="zoom" change="changeZoom()" enabled="false" liveDragging="true"
 						maximum="8" minimum="0" showDataTip="false" snapInterval="1" value="4"/>
 			<mx:Label id="zoomText" width="50" text="100%"/>
