@@ -416,7 +416,7 @@
 		<mx:Spacer height="10"/>
 		<mx:Text width="100%" text="@Resource(bundle='locale', key='smooth_description_pores')"/>
 		<mx:HBox horizontalGap="0">
-			<mx:Label fontSize="11" text="Pore Radius:"/>
+			<mx:Label fontSize="11" text="@Resource(bundle='locale', key='smooth_pore_radius')"/>
 			<mx:Label fontSize="11" text="{poreRadius.value.toFixed(1)}" textAlign="left"/>
 		</mx:HBox>
 		<mx:HSlider id="poreRadius" change="smooth()" liveDragging="true" maximum="5" minimum="0"
